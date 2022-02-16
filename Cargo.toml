@@ -22,3 +22,7 @@ trace = [
 bevy = { version = "0.6.0" }
 bevy-inspector-egui = { version = "0.8.1" }
 bevy_polyline = { version = "0.1.0" }
+
+[dev-dependencies]
+# For compairsons
+bevy_rapier3d = { git = "https://github.com/dimforge/bevy_rapier", branch = "master" }

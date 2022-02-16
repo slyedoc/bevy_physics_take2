@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use bevy_inspector_egui::{Inspectable, InspectorPlugin};
 
 use bevy_physics_take2::{Body, ColliderSphere, Mass, PhysicsPlugin};
+use bevy_rapier3d::{physics::{ColliderBundle, ColliderPositionSync, RigidBodyBundle, RapierPhysicsPlugin, NoUserData}, prelude::{ColliderShape, RigidBodyVelocity}};
 // use bevy_rapier3d::{
 //     physics::{ColliderBundle, ColliderPositionSync, NoUserData, RigidBodyBundle},
 //     prelude::{ColliderShape, RapierPhysicsPlugin, RigidBodyVelocity},
@@ -34,7 +35,7 @@ impl FromWorld for StackConfig {
 
         Self {
             shape: Shape::Sphere,
-            count: 2000,
+            count: 10000,
             base_size: 10,
             grid_offset: 1.0,
             ball_material: materials.add(StandardMaterial {
@@ -72,7 +73,7 @@ fn main() {
         .add_plugin(PhysicsPlugin)
         //.add_plugin(PhysicsDebugPlugin)
         // Rapier
-        //.add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
+        .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         //.add_plugin(RapierRenderPlugin)
         // Custom helpers
         .add_plugin(InspectorPlugin::<StackConfig>::new())
@@ -92,8 +93,8 @@ fn enter_play_system(
     info!("Reset");
 
     // Create the ground
-    //let ground_half_extents = Vec3::new(50.0, 0.5, 50.0);
-    //let ground_pos = Vec3::new(0.0, -ground_half_extents.y, 0.0);
+    let ground_half_extents = Vec3::new(50.0, 0.5, 50.0);
+    let ground_pos = Vec3::new(0.0, -ground_half_extents.y, 0.0);
     match config.engine {
         Engine::Crate => {
             commands
@@ -123,34 +124,34 @@ fn enter_play_system(
                 .insert(Name::new("Ground"));
         }
         Engine::Rapier => {
-            // commands
-            //     .spawn_bundle(PbrBundle {
-            //         transform: Transform::from_translation(ground_pos),
-            //         mesh: meshes.add(Mesh::from(shape::Box::new(
-            //             ground_half_extents.x * 2.0,
-            //             ground_half_extents.y * 2.0,
-            //             ground_half_extents.z * 2.0,
-            //         ))),
-            //         material: materials.add(StandardMaterial {
-            //             base_color: Color::GREEN,
-            //             ..Default::default()
-            //         }),
-            //         ..Default::default()
-            //     })
-            //     .insert_bundle(ColliderBundle {
-            //         shape: ColliderShape::cuboid(
-            //             ground_half_extents.x,
-            //             ground_half_extents.y,
-            //             ground_half_extents.z,
-            //         )
-            //         .into(),
-            //         position: ground_pos.into(),
-            //         ..ColliderBundle::default()
-            //     })
-            //     //.insert(ColliderDebugRender::default())
-            //     .insert(ColliderPositionSync::Discrete)
-            //     .insert(Reset)
-            //     .insert(Name::new("Ground"));
+            commands
+                .spawn_bundle(PbrBundle {
+                    transform: Transform::from_translation(ground_pos),
+                    mesh: meshes.add(Mesh::from(shape::Box::new(
+                        ground_half_extents.x * 2.0,
+                        ground_half_extents.y * 2.0,
+                        ground_half_extents.z * 2.0,
+                    ))),
+                    material: materials.add(StandardMaterial {
+                        base_color: Color::GREEN,
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                })
+                .insert_bundle(ColliderBundle {
+                    shape: ColliderShape::cuboid(
+                        ground_half_extents.x,
+                        ground_half_extents.y,
+                        ground_half_extents.z,
+                    )
+                    .into(),
+                    position: ground_pos.into(),
+                    ..ColliderBundle::default()
+                })
+                //.insert(ColliderDebugRender::default())
+                .insert(ColliderPositionSync::Discrete)
+                .insert(Reset)
+                .insert(Name::new("Ground"));
         }
     }
 
@@ -207,26 +208,26 @@ fn enter_play_system(
                 }
             }
             Engine::Rapier => {
-                // commands
-                //     .entity(item)
-                //     .insert_bundle(RigidBodyBundle {
-                //         position: pos.into(),
-                //         // TODO: Remove this, a small velocity so its not a stable stack
-                //         velocity: RigidBodyVelocity {
-                //             linvel: Vec3::new(0.1, 0.0, 0.0).into(),
-                //             angvel: Vec3::new(0.1, 0.0, 0.0).into(),
-                //         }
-                //         .into(),
-                //         ..Default::default()
-                //     })
-                //     .insert_bundle(ColliderBundle {
-                //         shape: match config.shape {
-                //             Shape::Sphere => ColliderShape::ball(0.5).into(),
-                //             Shape::Box => ColliderShape::cuboid(0.5, 0.5, 0.5).into(),
-                //         },
-                //         ..ColliderBundle::default()
-                //     })
-                //     .insert(ColliderPositionSync::Discrete);
+                commands
+                    .entity(item)
+                    .insert_bundle(RigidBodyBundle {
+                        position: pos.into(),
+                        // TODO: Remove this, a small velocity so its not a stable stack
+                        velocity: RigidBodyVelocity {
+                            linvel: Vec3::new(0.1, 0.0, 0.0).into(),
+                            angvel: Vec3::new(0.1, 0.0, 0.0).into(),
+                        }
+                        .into(),
+                        ..Default::default()
+                    })
+                    .insert_bundle(ColliderBundle {
+                        shape: match config.shape {
+                            Shape::Sphere => ColliderShape::ball(0.5).into(),
+                            Shape::Box => ColliderShape::cuboid(0.5, 0.5, 0.5).into(),
+                        },
+                        ..ColliderBundle::default()
+                    })
+                    .insert(ColliderPositionSync::Discrete);
             }
         }
     }

@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*};
 
 use crate::{BroadContact, GlobalAabb};
 
@@ -10,15 +10,17 @@ pub fn broadphase_system(
     mut broad_contacts: EventWriter<BroadContact>,
     query: Query<(Entity, &GlobalAabb)>,
 ) {
+    //let t0 = Instant::now();
     // TODO: Yes, we are copying the array out here, only way to sort it
     // Ideally we would keep the array around, it should already near sorted
     let mut list = query.iter()
         .collect::<Vec<_>>();
     
-        info!("test", );
     // Sort the array on currently selected sorting axis
+    // Note: Update inter loop if you change the axis
     list.sort_unstable_by(cmp_x_axis);
 
+    //let t1 = Instant::now();
     // Sweep the array for collisions
     for (i, (a, aabb_a)) in list.iter().enumerate() {
         // Test collisions against all possible overlapping AABBs following current one
@@ -27,40 +29,40 @@ pub fn broadphase_system(
             if aabb_b.minimums.x > aabb_a.maximums.x {
                 break;
             }
-            if aabb_aabb_intersect(*aabb_a, *aabb_b) {
-                broad_contacts.send(BroadContact { a: *a, b: *b });
+
+            // SAT test
+            if aabb_a.minimums.x >= aabb_b.maximums.x {
+                 continue;
             }
+            if aabb_a.maximums.x <= aabb_b.minimums.x {
+                continue;
+            }
+        
+            if aabb_a.minimums.y >= aabb_b.maximums.y {
+                continue;
+            }
+            if aabb_a.maximums.y <= aabb_b.minimums.y {
+                continue;
+            }
+
+            if aabb_a.minimums.z >= aabb_b.maximums.z {
+                continue;
+            }
+            if aabb_a.maximums.z <= aabb_b.minimums.z {
+                continue;
+            }
+        
+            // Overlap on all three axes, so their intersection must be non-empty
+            broad_contacts.send(BroadContact { a: *a, b: *b });
+
         }
 
     }
+    // let t2 = Instant::now();
+    // let sort = t1.duration_since(t0);
+    // let sweep = t2.duration_since(t1);
+    // info!("sort {:?}, sweep {:?}", sort, sweep);
 }
-
-pub fn aabb_aabb_intersect(a: &GlobalAabb, b: &GlobalAabb) -> bool {
-    if a.minimums.x >= b.maximums.x {
-        return false;
-    }
-    if a.maximums.x <= b.minimums.x {
-        return false;
-    }
-
-    if a.minimums.y >= b.maximums.y {
-        return false;
-    }
-    if a.maximums.y <= b.minimums.y {
-        return false;
-    }
-
-    if a.minimums.z >= b.maximums.z {
-        return false;
-    }
-    if a.maximums.z <= b.minimums.z {
-        return false;
-    }
-
-    // Overlap on all three axes, so their intersection must be non-empty
-    true
-}
-
 
 fn cmp_x_axis( a: &(Entity, &GlobalAabb), b: &(Entity, &GlobalAabb)) -> std::cmp::Ordering {
     // Sort on minimum value along either x, y, or z axis

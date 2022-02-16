@@ -70,6 +70,7 @@ impl Plugin for PhysicsPlugin {
         app.add_plugin(PolylinePlugin)
             .init_resource::<PhysicsConfig>()
             .init_resource::<PhysicsTime>()
+            .init_resource::<PhysicsReport>()
             .add_event::<BroadContact>()
             .add_event::<Contact>()
             .register_inspectable::<Body>()
@@ -77,6 +78,7 @@ impl Plugin for PhysicsPlugin {
             .register_inspectable::<GlobalAabb>()
             .register_inspectable::<ColliderType>()
             .register_inspectable::<ColliderSphere>()
+            
             .add_system_set_to_stage(
                 CoreStage::PostUpdate,
                 SystemSet::new()
@@ -109,6 +111,7 @@ impl Plugin for PhysicsPlugin {
                     .label(Phases::Debug)
                     .after(Phases::UpdatePosition)
                     .with_run_criteria(run_debug)
+                    .with_system(report_system)
                     .with_system(draw_contacts_system),
             );
     }
@@ -158,7 +161,7 @@ pub fn update_body(mut query: Query<(&mut Body, &GlobalTransform)>) {
 pub fn update_aabb(mut query: Query<(&GlobalTransform, &Aabb, &mut GlobalAabb)>) {
     for (trans, aabb, mut global_aabb) in query.iter_mut() {
 
-        // TODO: We dont account for rotation yet
+        // TODO: We dont account for rotation yet, but spheres dont need it
         global_aabb.minimums = trans.translation + aabb.minimums;
         global_aabb.maximums = trans.translation + aabb.maximums;
     }
@@ -179,7 +182,7 @@ pub fn spawn<T: 'static + Component + Collider>(
             .entity(e)
             .insert(collider.get_type())
             .insert(collider.get_aabb())
-            .insert( GlobalAabb::default());
+            .insert( GlobalAabb::default()); // will be set by update_aabb
     }
 }
 

@@ -6,7 +6,7 @@ pub mod reset;
 use bevy::prelude::*;
 use bevy_inspector_egui::InspectorPlugin;
 
-use bevy_physics_take2::{PhysicsConfig};
+use bevy_physics_take2::{PhysicsConfig, PhysicsReport};
 pub use camera_controller::*;
 pub use editor::*;
 pub use fps::*;
@@ -20,7 +20,7 @@ impl Plugin for HelperPlugin {
             .add_plugin(CameraControllerPlugin)
             .add_plugin(ResetPlugin)
             .add_plugin(FPSPlugin)
-            //.add_plugin(InspectorPlugin::<PhysicsReport>::new())
+            .add_plugin(InspectorPlugin::<PhysicsReport>::new())
             .add_plugin(InspectorPlugin::<PhysicsConfig>::new());
 
         #[cfg(feature = "timeout")]
