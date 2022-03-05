@@ -44,7 +44,7 @@ impl Default for Body {
 }
 impl Body {
 
-    pub fn centre_of_mass_world(&self, t: &GlobalTransform) -> Vec3 {
+    pub fn center_of_mass_world(&self, t: &GlobalTransform) -> Vec3 {
         t.translation + t.rotation * self.center_of_mass
     }
     
@@ -93,11 +93,10 @@ impl Body {
 
         // we have an angular velocity around the centre of mass, this needs to be converted to
         // relative body translation. This way we can properly update the rotation of the model
-        
-        let position_com = self.centre_of_mass_world(transform);
+
+        let position_com = self.center_of_mass_world;
         let com_to_position = transform.translation - position_com;
-        
-        
+
         // total torque is equal to external applied torques + internal torque (precession)
         // T = T_external + omega x I * omega
         // T_external = 0 because it was applied in the collision response function
@@ -124,6 +123,12 @@ impl Body {
 
         // now get the new body position
         transform.translation = position_com + dq * com_to_position;
+
+        // update center of mass and inverse inertia tensor
+        self.center_of_mass_world = transform.translation + transform.rotation * self.center_of_mass;
+        let orientation = Mat3::from_quat(transform.rotation);
+        self.inverse_inertia_tensor_world =
+            orientation * self.inverse_inertia_tensor_local * orientation.transpose();
     }
 }
 

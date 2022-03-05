@@ -1,4 +1,4 @@
-use bevy::{prelude::*};
+use bevy::prelude::*;
 
 use crate::{BroadContact, GlobalAabb};
 
@@ -13,9 +13,8 @@ pub fn broadphase_system(
     //let t0 = Instant::now();
     // TODO: Yes, we are copying the array out here, only way to sort it
     // Ideally we would keep the array around, it should already near sorted
-    let mut list = query.iter()
-        .collect::<Vec<_>>();
-    
+    let mut list = query.iter().collect::<Vec<_>>();
+
     // Sort the array on currently selected sorting axis
     // Note: Update inter loop if you change the axis
     list.sort_unstable_by(cmp_x_axis);
@@ -32,12 +31,12 @@ pub fn broadphase_system(
 
             // SAT test
             if aabb_a.minimums.x >= aabb_b.maximums.x {
-                 continue;
+                continue;
             }
             if aabb_a.maximums.x <= aabb_b.minimums.x {
                 continue;
             }
-        
+
             if aabb_a.minimums.y >= aabb_b.maximums.y {
                 continue;
             }
@@ -51,12 +50,10 @@ pub fn broadphase_system(
             if aabb_a.maximums.z <= aabb_b.minimums.z {
                 continue;
             }
-        
+
             // Overlap on all three axes, so their intersection must be non-empty
             broad_contacts.send(BroadContact { a: *a, b: *b });
-
         }
-
     }
     // let t2 = Instant::now();
     // let sort = t1.duration_since(t0);
@@ -64,7 +61,13 @@ pub fn broadphase_system(
     // info!("sort {:?}, sweep {:?}", sort, sweep);
 }
 
-fn cmp_x_axis( a: &(Entity, &GlobalAabb), b: &(Entity, &GlobalAabb)) -> std::cmp::Ordering {
+// #[cfg(feature = "trace")]
+// let stage_span = bevy_utils::tracing::info_span!("stage", name = "extract");
+// #[cfg(feature = "trace")]
+// let _stage_guard = stage_span.enter();
+
+#[allow(dead_code)]
+fn cmp_x_axis(a: &(Entity, &GlobalAabb), b: &(Entity, &GlobalAabb)) -> std::cmp::Ordering {
     // Sort on minimum value along either x, y, or z axis
     let min_a = a.1.minimums.x;
     let min_b = b.1.minimums.x;
@@ -78,7 +81,7 @@ fn cmp_x_axis( a: &(Entity, &GlobalAabb), b: &(Entity, &GlobalAabb)) -> std::cmp
 }
 
 #[allow(dead_code)]
-fn cmp_y_axis( a: &(Entity, &GlobalAabb), b: &(Entity, &GlobalAabb)) -> std::cmp::Ordering {
+fn cmp_y_axis(a: &(Entity, &GlobalAabb), b: &(Entity, &GlobalAabb)) -> std::cmp::Ordering {
     // Sort on minimum value along either x, y, or z axis
     let min_a = a.1.minimums.y;
     let min_b = b.1.minimums.y;
@@ -92,7 +95,7 @@ fn cmp_y_axis( a: &(Entity, &GlobalAabb), b: &(Entity, &GlobalAabb)) -> std::cmp
 }
 
 #[allow(dead_code)]
-fn cmp_z_axis( a: &(Entity, GlobalAabb), b: &(Entity, GlobalAabb)) -> std::cmp::Ordering {
+fn cmp_z_axis(a: &(Entity, GlobalAabb), b: &(Entity, GlobalAabb)) -> std::cmp::Ordering {
     // Sort on minimum value along either x, y, or z axis
     let min_a = a.1.minimums.z;
     let min_b = b.1.minimums.z;

@@ -13,6 +13,7 @@ fn main() {
         })
         .add_plugins(DefaultPlugins)
         .add_plugin(HelperPlugin)
+
         // our plugin
         .add_plugin(PhysicsPlugin)
         .add_startup_system(setup)
@@ -114,4 +115,7 @@ fn setup(mut commands: Commands) {
 
     // light
     helper::spawn_light(&mut commands);
+
+
+    
 }

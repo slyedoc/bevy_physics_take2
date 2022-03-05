@@ -1,10 +1,8 @@
 use bevy::prelude::*;
 
-
 pub struct ResetPlugin;
 
 pub struct ResetEvent;
-
 #[derive(Component)]
 pub struct Reset;
 
@@ -13,7 +11,7 @@ impl Plugin for ResetPlugin {
         app.add_event::<ResetEvent>()
             .add_startup_system(setup)
             .add_system_to_stage(
-                CoreStage::PostUpdate,
+                CoreStage::Update,
                 reset_level//.before(Physics::PreUpdate),
             );
     }

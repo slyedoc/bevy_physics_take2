@@ -1,7 +1,7 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, render};
 use bevy_inspector_egui::Inspectable;
 
-/// Defines an axis-aligned bounding box in local space - that is - the bounding box is located at
+/// Defines a local axis-aligned bounding box - that is - the bounding box is located at
 /// the Entity transform origin
 #[derive(Debug, Component, Inspectable)]
 pub struct Aabb {
@@ -18,14 +18,54 @@ pub struct Aabb {
 impl Default for Aabb {
     fn default() -> Self {
         Self {
-                minimums: Vec3::splat(std::f32::MAX),
-                maximums: Vec3::splat(std::f32::MIN),
-            }
+            minimums: Vec3::splat(std::f32::MAX),
+            maximums: Vec3::splat(std::f32::MIN),
+        }
+    }
+}
+
+impl Aabb {
+
+    /// Returns the vertices of the bounding box in world space, the current mesh transform.
+    pub fn vertices(&self, transform: &GlobalTransform) -> [Vec3; 8] {
+        let vertices_mesh_space = self.vertices_mesh_space();
+        [
+            transform.translation - vertices_mesh_space[0],
+            transform.translation - vertices_mesh_space[1],
+            transform.translation - vertices_mesh_space[2],
+            transform.translation - vertices_mesh_space[3],
+            transform.translation - vertices_mesh_space[4],
+            transform.translation - vertices_mesh_space[5],
+            transform.translation - vertices_mesh_space[6],
+            transform.translation - vertices_mesh_space[7],
+        ]
+    }
+
+    // TODO: we should cache this
+    pub fn vertices_mesh_space(&self) -> [Vec3; 8] {
+        /*
+              (2)-----(3)               Y
+               | \     | \              |
+               |  (1)-----(0) MAX       o---X
+               |   |   |   |             \
+          MIN (6)--|--(7)  |              Z
+                 \ |     \ |
+                  (5)-----(4)
+        */
+        [
+            Vec3::new(self.maximums.x, self.maximums.y, self.maximums.z), //0
+            Vec3::new(self.minimums.x, self.maximums.y, self.maximums.z), //1
+            Vec3::new(self.minimums.x, self.maximums.y, self.minimums.z), //2
+            Vec3::new(self.maximums.x, self.maximums.y, self.minimums.z), //3
+            Vec3::new(self.maximums.x, self.minimums.y, self.maximums.z), //4
+            Vec3::new(self.minimums.x, self.minimums.y, self.maximums.z), //5
+            Vec3::new(self.minimums.x, self.minimums.y, self.minimums.z), //6
+            Vec3::new(self.maximums.x, self.minimums.y, self.minimums.z), //7
+        ]
     }
 }
 
 /// This will be a valid AABB updated with [GlobalTransform]
-/// to compute a valid AABB. This reduces float error when the mesh is located far from the origin.
 #[derive(Debug, Component, Inspectable)]
 pub struct GlobalAabb {
     pub minimums: Vec3,
@@ -35,9 +75,59 @@ pub struct GlobalAabb {
 impl Default for GlobalAabb {
     fn default() -> Self {
         Self {
-                minimums: Vec3::splat(std::f32::MAX),
-                maximums: Vec3::splat(std::f32::MIN),
-            }
+            minimums: Vec3::splat(std::f32::MAX),
+            maximums: Vec3::splat(std::f32::MIN),
+        }
+    }
+}
+
+
+impl GlobalAabb {
+    pub fn from_min_max(minimum: Vec3, maximum: Vec3) -> render::primitives::Aabb {
+        let center = 0.5 * (maximum + minimum);
+        let half_extents = 0.5 * (maximum - minimum);
+        render::primitives::Aabb {
+            center,
+            half_extents,
+        }
+    }
+
+    /// Returns the vertices of the bounding box in world space, the current mesh transform.
+    pub fn vertices(&self, transform: &GlobalTransform) -> [Vec3; 8] {
+        let vertices_mesh_space = self.vertices_mesh_space();
+        [
+            transform.translation - vertices_mesh_space[0],
+            transform.translation - vertices_mesh_space[1],
+            transform.translation - vertices_mesh_space[2],
+            transform.translation - vertices_mesh_space[3],
+            transform.translation - vertices_mesh_space[4],
+            transform.translation - vertices_mesh_space[5],
+            transform.translation - vertices_mesh_space[6],
+            transform.translation - vertices_mesh_space[7],
+        ]
+    }
+
+    // TODO: we should cache this
+    pub fn vertices_mesh_space(&self) -> [Vec3; 8] {
+        /*
+              (2)-----(3)               Y
+               | \     | \              |
+               |  (1)-----(0) MAX       o---X
+               |   |   |   |             \
+          MIN (6)--|--(7)  |              Z
+                 \ |     \ |
+                  (5)-----(4)
+        */
+        [
+            Vec3::new(self.maximums.x, self.maximums.y, self.maximums.z), //0
+            Vec3::new(self.minimums.x, self.maximums.y, self.maximums.z), //1
+            Vec3::new(self.minimums.x, self.maximums.y, self.minimums.z), //2
+            Vec3::new(self.maximums.x, self.maximums.y, self.minimums.z), //3
+            Vec3::new(self.maximums.x, self.minimums.y, self.maximums.z), //4
+            Vec3::new(self.minimums.x, self.minimums.y, self.maximums.z), //5
+            Vec3::new(self.minimums.x, self.minimums.y, self.minimums.z), //6
+            Vec3::new(self.maximums.x, self.minimums.y, self.minimums.z), //7
+        ]
     }
 }
 
@@ -79,7 +169,6 @@ impl Default for GlobalAabb {
 //                  \ |     \ |
 //                   (5)-----(4)
 //         */
-
 //         [
 //             Vec3::new(self.maximums.x, self.maximums.y, self.maximums.z), //0
 //             Vec3::new(self.minimums.x, self.maximums.y, self.maximums.z), //1

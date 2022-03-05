@@ -1,18 +1,11 @@
-//use bevy_polyline::{Polyline, PolylineBundle, PolylineMaterial, PolylinePlugin};
-
-pub fn draw_contacts_system() {
-
-}
-
-
 use bevy::prelude::*;
 use bevy_inspector_egui::Inspectable;
 
-use crate::{Body, PhysicsTime, BroadContact, Contact};
+use crate::{PhysicsTime, Body, BroadContact, Contact};
 
 
-#[derive(Inspectable, Default, Debug, Copy, Clone)]
 // TODO: Make this disable so user knows they can't change anything
+#[derive(Inspectable, Default, Debug, Copy, Clone)]
 pub struct PhysicsReport {
     time: f32,
     #[inspectable()]

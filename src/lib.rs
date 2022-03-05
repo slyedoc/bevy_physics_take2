@@ -68,9 +68,9 @@ pub struct PhysicsPlugin;
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(PolylinePlugin)
+            .add_plugin(PhysicsDebugPlugin)
             .init_resource::<PhysicsConfig>()
             .init_resource::<PhysicsTime>()
-            .init_resource::<PhysicsReport>()
             .add_event::<BroadContact>()
             .add_event::<Contact>()
             .register_inspectable::<Body>()
@@ -78,12 +78,11 @@ impl Plugin for PhysicsPlugin {
             .register_inspectable::<GlobalAabb>()
             .register_inspectable::<ColliderType>()
             .register_inspectable::<ColliderSphere>()
-            
             .add_system_set_to_stage(
                 CoreStage::PostUpdate,
                 SystemSet::new()
                     .label(Phases::Setup)
-                    .after(TransformSystem::TransformPropagate)                    
+                    .after(TransformSystem::TransformPropagate)
                     .with_system(spawn_body.label("setup_1"))
                     .with_system(spawn::<ColliderSphere>.label("setup_2").after("setup_1"))
                     .with_system(update_body.label("setup_3").after("setup_2"))
@@ -105,15 +104,7 @@ impl Plugin for PhysicsPlugin {
                             .after(Phases::Resolve),
                     ),
             )
-            .add_system_set_to_stage(
-                CoreStage::PostUpdate,
-                SystemSet::new()
-                    .label(Phases::Debug)
-                    .after(Phases::UpdatePosition)
-                    .with_run_criteria(run_debug)
-                    .with_system(report_system)
-                    .with_system(draw_contacts_system),
-            );
+;
     }
 }
 
@@ -125,13 +116,7 @@ fn run_physics(config: Res<PhysicsConfig>) -> ShouldRun {
     }
 }
 
-fn run_debug(config: Res<PhysicsConfig>) -> ShouldRun {
-    if config.debug {
-        ShouldRun::Yes
-    } else {
-        ShouldRun::No
-    }
-}
+
 
 fn update_time_system(time: Res<Time>, mut pt: ResMut<PhysicsTime>) {
     pt.time = time.delta_seconds();
